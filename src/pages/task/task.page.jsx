@@ -4,15 +4,18 @@ import { toast } from 'react-toastify'
 import { BASE_URL } from '@/constants'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { logout } from '../../redux/slices/authSlice'
 
 const TaskPage = () => {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const auth = useSelector((state) => state.auth)
   const userId = auth?.user?._id
+  console.log("User ID:", userId);
 
   if (!userId) {
     toast.error('User not logged in')
@@ -132,6 +135,9 @@ const TaskPage = () => {
             ))}
           </div>
         )}
+        <Button className="mt-6" onClick={() => dispatch(logout())} disabled={loading}>
+          Logout
+        </Button>
       </div>
     </div>
   )

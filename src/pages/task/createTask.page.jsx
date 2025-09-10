@@ -23,7 +23,7 @@ const CreateTaskPage = () => {
     data.userId = userId
     setLoading(true)
     try {
-      const res = await axios.post(`${BASE_URL}/api/tasks`, JSON.stringify(data), {
+      const res = await axios.post(`${BASE_URL}/api/tasks/${userId}`, JSON.stringify(data), {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
