@@ -1,32 +1,42 @@
 import React, { useState } from 'react'
-import TaskForm from '@/components/TaskForm'
+import TaskForm from '../../components/forms/taskForm'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import axios from 'axios'
+import { BASE_URL } from '../../constants'
+import { useSelector } from 'react-redux'
 
 const CreateTaskPage = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const auth = useSelector((state) => state.auth)
+  const userId = auth?.user?._id
+  const token = auth?.token
+  console.log(userId)
+  
+  if (!userId) {
+    toast.error('User not logged in')
+    navigate('/login')
+  }
 
   const handleCreate = async (data) => {
+    data.userId = userId
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
+      const res = await axios.post(`${BASE_URL}/api/tasks`, JSON.stringify(data), {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
       })
-
-      if (!res.ok) {
+      console.log(res)
+      if (!res.status === 201) {
         const err = await res.json()
         throw new Error(err.message)
       }
 
       toast.success('Task created')
-      navigate('/tasks')
+      navigate('/task')
     } catch (err) {
       toast.error(err.message || 'Failed to create task')
     } finally {

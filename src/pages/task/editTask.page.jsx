@@ -1,56 +1,62 @@
 import React, { useEffect, useState } from 'react'
-import TaskForm from '@/components/TaskForm'
+import TaskForm from '../../components/forms/taskForm'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import axios from 'axios'
+import { BASE_URL } from '../../constants'
+import { useSelector } from 'react-redux'
 
 const EditTaskPage = () => {
   const [loading, setLoading] = useState(false)
   const [initialData, setInitialData] = useState(null)
   const navigate = useNavigate()
   const { id } = useParams()
+  const auth = useSelector((state) => state.auth)
+  const token = auth?.token
 
-  useEffect(() => {
-    const fetchTask = async () => {
-      setLoading(true)
-      try {
-        const token = localStorage.getItem('token')
-        const res = await fetch(`/api/tasks/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+  if (!auth?.user?._id) {
+    toast.error('User not logged in')
+    navigate('/login')
+  }
 
-        if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.message)
-        }
-
-        const data = await res.json()
-        setInitialData(data)
-      } catch (err) {
-        toast.error(err.message || 'Failed to fetch task')
-      } finally {
-        setLoading(false)
+  const fetchTask = async () => {
+    setLoading(true)
+    try {
+      const res = await axios.get(`${BASE_URL}/api/tasks/${id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      console.log(res)
+      if (!res.status === 201) {
+        const err = await res.json()
+        throw new Error(err.message)
       }
-    }
 
+      const data = await res.data
+      setInitialData(data)
+    } catch (err) {
+      toast.error(err.message || 'Failed to fetch task')
+    } finally {
+      setLoading(false)
+    }
+  }
+  useEffect(() => {
     fetchTask()
   }, [id])
 
   const handleUpdate = async (updatedData) => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: 'PUT', // or PATCH if your API supports it
+      const res = await axios.put(`${BASE_URL}/api/tasks/${id}`, JSON.stringify(updatedData), {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(updatedData),
       })
 
-      if (!res.ok) {
+      if (!res.status === 200) {
         const err = await res.json()
         throw new Error(err.message)
       }

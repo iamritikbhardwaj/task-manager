@@ -1,39 +1,53 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormMessage,
-} from '@/components/ui/form'
 import { toast } from 'react-toastify'
+import { BASE_URL } from '@/constants'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 
 const TaskPage = () => {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const navigate = useNavigate()
+  const auth = useSelector((state) => state.auth)
+  const userId = auth?.user?._id
+
+  if (!userId) {
+    toast.error('User not logged in')
+    navigate('/login')
+  }
+
+  const navigateToCreateTask = () => {
+    navigate('/task/create')
+  }
+
+  const navigateToEditTask = (id) => {
+    navigate(`/task/edit/${id}`)
+  }
 
   const fetchTasks = async () => {
     setLoading(true)
     setError(null)
     try {
-      const token = localStorage.getItem('token')
+      const token = auth?.token || "";
 
-      const res = await fetch('/api/tasks', {
+      const res = await axios.get(`${BASE_URL}/api/tasks?id=${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
+      console.log(res.data)
+      const data = await res.data
 
-      const data = await res.json()
-
-      if (!res.ok) {
+      if (!res.status === 200) {
         throw new Error(data.message || 'Failed to fetch tasks')
       }
 
-      setTasks(data)
+      if (Array.isArray(data)){
+        setTasks(data)
+      } 
     } catch (err) {
       setError(err.message)
     } finally {
@@ -46,14 +60,14 @@ const TaskPage = () => {
 
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: 'DELETE',
+      const res = await axios.delete(`${BASE_URL}/api/tasks/${id}`, {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       })
-
-      if (!res.ok) {
+      console.log(res)
+      if (!res.status === 201) {
         const errData = await res.json()
         throw new Error(errData.message || 'Delete failed')
       }
@@ -74,7 +88,7 @@ const TaskPage = () => {
       <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-slate-800">Your Tasks</h1>
-          <Button onClick={() => toast.info('Create Task TODO')}>
+          <Button onClick={navigateToCreateTask} disabled={loading}>
             + New Task
           </Button>
         </div>
@@ -102,14 +116,14 @@ const TaskPage = () => {
 
                 <div className="flex gap-2">
                   <Button
-                    variant="outline"
-                    onClick={() => toast.info('Edit Task TODO')}
+                    variant="destructive"
+                    onClick={() => navigateToEditTask(task._id)}
                   >
                     Edit
                   </Button>
                   <Button
                     variant="destructive"
-                    onClick={() => deleteTask(task.id)}
+                    onClick={() => deleteTask(task._id)}
                   >
                     Delete
                   </Button>

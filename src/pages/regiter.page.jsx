@@ -11,6 +11,8 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form'
+import axios from 'axios'
+import { BASE_URL } from '../constants'
 
 const RegisterPage = () => {
   const navigate = useNavigate()
@@ -26,17 +28,16 @@ const RegisterPage = () => {
   const onSubmit = async (data) => {
     setLoading(true)
     try {
-      const response = await fetch('/api/users/register', {
-        method: 'POST',
+      const response = await axios.post(`${BASE_URL}/api/users`, data, {
+        withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
       })
 
-      const json = await response.json()
+      const json = await response.data;
 
-      if (response.ok) {
+      if (response.status === 201) {
         toast.success('Registration successful!')
         navigate('/login')
       } else {
@@ -60,18 +61,18 @@ const RegisterPage = () => {
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <FormField
-              name="name"
+              name="username"
               render={({ field }) => (
                 <FormItem>
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="username">Name</Label>
                   <Input
-                    id="name"
+                    id="username"
                     placeholder="John Doe"
-                    {...register('name', { required: 'Name is required' })}
+                    {...register('username', { required: 'Name is required' })}
                     {...field}
                   />
-                  {errors.name && (
-                    <FormMessage>{errors.name.message}</FormMessage>
+                  {errors.username && (
+                    <FormMessage>{errors.username.message}</FormMessage>
                   )}
                 </FormItem>
               )}

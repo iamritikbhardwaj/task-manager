@@ -1,10 +1,13 @@
 {
+  // "$schema": "https://www.schemastore.org/tsconfig", // Remove or comment out if causing issues
   "compilerOptions": {
-    "allowJs": true,
+    "allowJs": true, // Prevents TypeScript from compiling JS files
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "noEmit": true // Prevents TypeScript from writing output files
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"], // Only include TS/TSX files
+  "exclude": ["src/**/*.js", "src/**/*.jsx"] // Exclude JS/JSX files from compilation
 }

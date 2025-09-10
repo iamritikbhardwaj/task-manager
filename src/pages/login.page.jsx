@@ -1,19 +1,24 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Button } from '@/components/ui/button'; 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import axios from 'axios';
+import { useDispatch } from 'react-redux';
 import {
   Form,
   FormField,
   FormItem,
   FormMessage,
 } from '@/components/ui/form'; // Adjust path based on your project structure
+import { BASE_URL } from '../constants';
+import { login } from '../redux/slices/authSlice';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const form = useForm();
 
@@ -26,17 +31,20 @@ const LoginPage = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
+      const response = await axios.post(`${BASE_URL}/api/users/login`, data, {
+        withCredentials: true,
         headers: {
-          'Content-Type': 'application/json',
+          "content-type": "application/json",
+          credentials: "include",
         },
-        body: JSON.stringify(data),
       });
-      const json = await response.json();
-      if (response.ok) {
-        localStorage.setItem('token', json.token);
-        navigate('/');
+      console.log(response.data, 'response');
+      const json = await response.data.token;
+      if (response.status === 200) {
+        const user = response.data.user;
+        const token = response.data.token;
+        dispatch(login({ user: user, token: token }));
+        navigate('/task');
       } else {
         toast.error(json.message);
       }
